@@ -72,7 +72,7 @@ class CategoryViewController: UITableViewController {
     func save(category: Category)
     {
         do {
-            try realm.write{
+            try realm.write{ //calling the functionn realm.write
                 realm.add(category)
             }
         }catch{

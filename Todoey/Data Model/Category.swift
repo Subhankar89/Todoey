@@ -9,7 +9,7 @@
 import Foundation
 import RealmSwift
 
-class Category: Object {
+class Category: Object { //Subclassing...Object is a Realm object
     @objc dynamic var name : String = ""
     let items = List<Item>() //this defines the forward realtionship
 }
