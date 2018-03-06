@@ -7,13 +7,15 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
     
-    var categoryArray = [Category]()
+    let realm = try! Realm()
     
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext //garbbing a refernece to context in order to CRUD data and would be communitcating with persistent container
+    var categoryArray: Results<Category>? //Results is the type present in Realm
+    
+    //let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext //garbbing a refernece to context in order to CRUD data and would be communitcating with persistent container
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,13 +25,13 @@ class CategoryViewController: UITableViewController {
     
     //MARK: - Table View Data Source Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        return categoryArray?.count ?? 1 //Nil Coalescing operator
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) //creates a reusable cell and adds to the table at the current indexpath that tableview is trying to loadup
         
-        cell.textLabel?.text = categoryArray[indexPath.row].name
+        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories add yet"
         
         return cell //return the cell to be rendered on screen
     }
@@ -41,7 +43,7 @@ class CategoryViewController: UITableViewController {
     {
         let destinationVC = segue.destination as! TodoListViewViewController //grabbing a reference to destination VC which is in this case is TodoListViewViewController
         if let indexPath = tableView.indexPathForSelectedRow{
-            destinationVC.selectedCategory = categoryArray[indexPath.row]
+            destinationVC.selectedCategory = categoryArray?[indexPath.row] //passing over the category as an optional category to TodoListViewController
         }
     }
     //MARK:- Add New Categories
@@ -52,10 +54,10 @@ class CategoryViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
             
-        let newCategory = Category(context: self.context)
+        let newCategory = Category()
         newCategory.name = textField.text!
-        self.categoryArray.append(newCategory)
-        self.saveCategory()
+        //self.categoryArray.append(newCategory)
+        self.save(category: newCategory)
         }
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create New Category"
@@ -67,10 +69,12 @@ class CategoryViewController: UITableViewController {
         
         }
     //MARK:- Data Manipulations Methods
-    func saveCategory()
+    func save(category: Category)
     {
         do {
-            try context.save()
+            try realm.write{
+                realm.add(category)
+            }
         }catch{
             print("Error Saving Category,\(error)")
         }
@@ -79,12 +83,14 @@ class CategoryViewController: UITableViewController {
     
     func loadCategory()
     {
-        let request:NSFetchRequest<Category> = Category.fetchRequest()
-        do{
-            categoryArray = try context.fetch(request) //fetching catergory
-        }catch{
-            print("Error Loading Category,\(error)")
-        }
+//        let request:NSFetchRequest<Category> = Category.fetchRequest()
+//        do{
+//            categoryArray = try context.fetch(request) //fetching catergory
+//        }catch{
+//            print("Error Loading Category,\(error)")
+//        }
+        categoryArray = realm.objects(Category.self) //pull out all the items from Realm
+        
         tableView.reloadData()
     }
 }
